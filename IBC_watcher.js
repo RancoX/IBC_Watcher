@@ -239,6 +239,7 @@ function getSaturdayNWeeksFromToday(nweeks=3) {
 
 async function main() {
   const { year, month, day } = getSaturdayNWeeksFromToday(NWEEKS);
+  logger.info(`Checking IBC booking status for Sat ${year}-${month}-${day}...`);
   const htmlText = await get_html(year, month, day);
   const bookingStatus = extractBookingStatus(htmlText);
   const simplified = simplifyBookingStatus24h(bookingStatus, [19, 20]);
