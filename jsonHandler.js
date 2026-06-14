@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import logger from "./logger.js";
 
 const FILE_PATH = path.join(import.meta.dirname, './scout_log.json');
 

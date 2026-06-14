@@ -1,5 +1,10 @@
 import winston from "winston";
 import path from "path";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const logLevel = process.env.LOGGER_LEVEL || "info";
 
 const logFilePath = path.join(import.meta.dirname, "logs", "ibc_watcher.log");
 
@@ -18,7 +23,7 @@ function formatDateTime() {
 }
 
 const logger = winston.createLogger({
-  level: "info",
+  level: logLevel,
 
   format: winston.format.combine(
     winston.format.timestamp({

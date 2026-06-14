@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { google } from "googleapis";
 import dotenv from "dotenv";
+import logger from "./logger.js";
 
 dotenv.config();
 
