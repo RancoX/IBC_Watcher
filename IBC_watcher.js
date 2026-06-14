@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import dotenv from "dotenv";
 import {generateMailHtml, sendEmail} from "./ranco_auto_gmail.js";
 import {readJsonFile, writeJsonFile} from "./jsonHandler.js";
+import logger from "./logger.js";
 
 dotenv.config();
 
@@ -231,7 +232,7 @@ function getSaturdayNWeeksFromToday(nweeks=3) {
     month: target.getMonth() + 1, // JavaScript months are 0-based
     day: target.getDate(),
   };
-  // console.log(results);
+  // logger.info(results);
   return results;
 }
 
@@ -241,19 +242,19 @@ async function main() {
   const htmlText = await get_html(year, month, day);
   const bookingStatus = extractBookingStatus(htmlText);
   const simplified = simplifyBookingStatus24h(bookingStatus, [19, 20]);
-//   console.log(JSON.stringify(simplified, null, 2));
+//   logger.info(JSON.stringify(simplified, null, 2));
   const availableCourts = getCourtsAvailableForAllHours(simplified, [19, 20]);
   const availableGroups = getAvailableConsecutiveCourtsByGroup(simplified, [19, 20]);
   const {Outside_4_Courts,Inside_4_Courts} = availableGroups;
   const courtSummary = summarizeAvailableCourts(availableCourts, COURT_GROUPS);
-  console.log("Available courts:", availableCourts);
-  console.log("Available consecutive courts by group:", availableGroups);
+  logger.info("Available courts:", availableCourts);
+  logger.info("Available consecutive courts by group:", availableGroups);
 
   // check if email has already been sent
   let scoutData = await readJsonFile();
   const entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
   if (entryExists) {
-    console.log(`Email has already been sent for Sat ${year}-${month}-${day}, following actions skipped.`);
+    logger.info(`Email has already been sent for Sat ${year}-${month}-${day}, following actions skipped.`);
     return;
   }
 
@@ -284,10 +285,10 @@ async function main() {
     }
     scoutData[scoutedDate] = newEntry;
     await writeJsonFile(scoutData);
-    console.log(`Scout log updated with entry: ${JSON.stringify(newEntry)} for ${scoutedDate}`);
+    logger.info(`Scout log updated with entry: ${JSON.stringify(newEntry)} for ${scoutedDate}`);
     return
   }
-  console.log(`No need to send email, available courts are sufficient.${availableCourts.count} (${courtSummary})`);
+  logger.info(`No need to send email, available courts are sufficient.${availableCourts.count} (${courtSummary})`);
 }
 
 main().catch(console.error);

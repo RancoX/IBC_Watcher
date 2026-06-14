@@ -51,8 +51,8 @@ export async function sendEmail(emailHTML) {
   try {
     const info = await smtpTransport.sendMail(emailHTML);
 
-    console.log(`Email sent to ${recipients}: ${info.response}`);
+    logger.debug(`Email sent to ${recipients}: ${info.response}`);
   } catch (err) {
-    console.error("Email failed with error message:", err);
+    logger.error("Email failed with error message:", err);
   }
 }

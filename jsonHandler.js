@@ -7,19 +7,19 @@ async function readJsonFile() {
     try {
         const data_bin = await fs.readFile(FILE_PATH, 'utf-8');
         const jsonData = JSON.parse(data_bin);
-        console.debug("JSON data read successfully:", jsonData);
+        logger.debug("JSON data read successfully:", jsonData);
         return jsonData;
     } catch (err) {
-        console.error("Error reading JSON file:", err);
+        logger.error("Error reading JSON file:", err);
     }
 }
 
 async function writeJsonFile(data) {
     try {
         await fs.writeFile(FILE_PATH, JSON.stringify(data, null, 4), 'utf-8');
-        console.debug("JSON data written successfully.");
+        logger.debug("JSON data written successfully.");
     } catch (err) {
-        console.error("Error writing JSON file:", err);
+        logger.error("Error writing JSON file:", err);
     }
 }
 
