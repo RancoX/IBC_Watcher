@@ -240,6 +240,13 @@ function getSaturdayNWeeksFromToday(nweeks=3) {
 async function main() {
   const { year, month, day } = getSaturdayNWeeksFromToday(NWEEKS);
   logger.info(`Checking IBC booking status for Sat ${year}-${month}-${day}...`);
+  // check if email has already been sent
+  let scoutData = await readJsonFile();
+  const entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
+  if (entryExists) {
+    logger.info(`Email has already been sent for Sat ${year}-${month}-${day}, following actions skipped.`);
+    return;
+  }
   const htmlText = await get_html(year, month, day);
   const bookingStatus = extractBookingStatus(htmlText);
   const simplified = simplifyBookingStatus24h(bookingStatus, [19, 20]);
@@ -251,13 +258,6 @@ async function main() {
   logger.info("Available courts:", availableCourts);
   logger.info("Available consecutive courts by group:", availableGroups);
 
-  // check if email has already been sent
-  let scoutData = await readJsonFile();
-  const entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
-  if (entryExists) {
-    logger.info(`Email has already been sent for Sat ${year}-${month}-${day}, following actions skipped.`);
-    return;
-  }
 
   if (Outside_4_Courts + Inside_4_Courts <= 7) {
     // generate email content
