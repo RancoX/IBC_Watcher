@@ -10,6 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",
     "googleapis": "^173.0.0",
     "nodemailer": "^8.0.11",
