@@ -5,6 +5,96 @@
         ],
         "outside": 0,
         "inside": 1,
-        "notifiedAt": "2026-06-14T13:11:42.939Z"
+        "notifiedAt": "2026-06-14T14:27:08.854Z"
+    },
+    "2026-7-11": {
+        "availableCourts": [
+            "Mercury",
+            "Venus",
+            "Mars",
+            "Jupiter",
+            "Saturn",
+            "Uranus",
+            "Neptune"
+        ],
+        "outside": 2,
+        "inside": 4,
+        "notifiedAt": "2026-06-20T10:40:09.587Z"
+    },
+    "2026-7-18": {
+        "availableCourts": [
+            "Earth",
+            "Mars",
+            "Jupiter",
+            "Saturn",
+            "Uranus",
+            "Neptune"
+        ],
+        "outside": 2,
+        "inside": 4,
+        "notifiedAt": "2026-06-20T21:00:09.586Z"
+    },
+    "2026-7-25": {
+        "availableCourts": [
+            "Earth",
+            "Mars",
+            "Jupiter",
+            "Saturn",
+            "Uranus",
+            "Neptune"
+        ],
+        "outside": 2,
+        "inside": 4,
+        "notifiedAt": "2026-06-27T21:00:09.304Z"
+    },
+    "2026-8-1": {
+        "availableCourts": [
+            "Mars"
+        ],
+        "outside": 1,
+        "inside": 0,
+        "notifiedAt": "2026-07-04T21:00:10.310Z"
+    },
+    "2026-8-8": {
+        "availableCourts": [
+            "Mercury",
+            "Mars",
+            "Neptune"
+        ],
+        "outside": 1,
+        "inside": 1,
+        "notifiedAt": "2026-07-11T21:00:10.110Z"
+    },
+    "2026-8-15": {
+        "availableCourts": [
+            "Jupiter"
+        ],
+        "outside": 0,
+        "inside": 1,
+        "notifiedAt": "2026-07-18T21:00:10.823Z"
+    },
+    "2026-8-22": {
+        "availableCourts": [],
+        "outside": 0,
+        "inside": 0,
+        "notifiedAt": "2026-07-25T21:00:10.278Z"
+    },
+    "2026-8-29": {
+        "availableCourts": [
+            "Jupiter"
+        ],
+        "outside": 0,
+        "inside": 1,
+        "notifiedAt": "2026-08-01T21:00:09.365Z"
+    },
+    "2026-9-5": {
+        "availableCourts": [
+            "Jupiter",
+            "Uranus",
+            "Neptune"
+        ],
+        "outside": 0,
+        "inside": 2,
+        "notifiedAt": "2026-08-08T21:00:09.145Z"
     }
 }
