@@ -1,15 +1,24 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import nodemailer from "nodemailer";
 import { google } from "googleapis";
 import dotenv from "dotenv";
 import logger from "./logger.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const senderGmail = process.env.GMAIL_ADDR;
 const recipients = process.env.RECIPIENTS;
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const gmailRefreshToken = process.env.GMAIL_REFRESH_TOKEN;
+const gmailRefreshToken = process.env.GMAIL_REFRESH_TOKEN?.trim();
+
+if (!gmailRefreshToken) {
+  throw new Error("GMAIL_REFRESH_TOKEN is missing. Check the .env file in IBC_watcher.");
+}
 
 const oAuth2Client = new google.auth.OAuth2(
   googleClientId,

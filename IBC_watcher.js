@@ -1,12 +1,17 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import * as cheerio from "cheerio";
 import dotenv from "dotenv";
-import {generateMailHtml, sendEmail} from "./ranco_auto_gmail.js";
-import {readJsonFile, writeJsonFile} from "./jsonHandler.js";
+import { generateMailHtml, sendEmail } from "./ranco_auto_gmail.js";
+import { readJsonFile, writeJsonFile } from "./jsonHandler.js";
 import logger from "./logger.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const NWEEKS=process.env.NWEEKS;
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+
+const NWEEKS = process.env.NWEEKS;
 const IBC_URL = "https://ibcbadminton.yepbooking.com.au/";
 const COURT_GROUPS = {
   Outside_4_Courts: ["Mercury", "Venus", "Earth", "Mars"],
@@ -213,7 +218,7 @@ function summarizeAvailableCourts(availableCourts, courtGroups) {
 }
 
 
-function getSaturdayNWeeksFromToday(nweeks=3) {
+function getSaturdayNWeeksFromToday(nweeks = 3) {
   const today = new Date();
 
   // Add the specified number of weeks
@@ -238,22 +243,27 @@ function getSaturdayNWeeksFromToday(nweeks=3) {
 
 
 async function main() {
-  const { year, month, day } = getSaturdayNWeeksFromToday(NWEEKS);
+  let current_nweeks = Number(NWEEKS);
+  let { year, month, day } = getSaturdayNWeeksFromToday(current_nweeks);
   logger.info(`Checking IBC booking status for Sat ${year}-${month}-${day}...`);
   // check if email has already been sent
   let scoutData = await readJsonFile();
-  const entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
-  if (entryExists) {
-    logger.info(`Email has already been sent for Sat ${year}-${month}-${day}, following actions skipped.`);
-    return;
+  let entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
+  while (entryExists) {
+    logger.info(`Email has already been sent for Sat ${year}-${month}-${day}, now checking next available date.`);
+    // Move to the next week
+    current_nweeks += 1;
+    ({year, month, day} = getSaturdayNWeeksFromToday(current_nweeks));
+    logger.info(`Now forward checking IBC booking status for Sat ${year}-${month}-${day}...`);
+    entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
   }
   const htmlText = await get_html(year, month, day);
   const bookingStatus = extractBookingStatus(htmlText);
   const simplified = simplifyBookingStatus24h(bookingStatus, [19, 20]);
-//   logger.info(JSON.stringify(simplified, null, 2));
+  //   logger.info(JSON.stringify(simplified, null, 2));
   const availableCourts = getCourtsAvailableForAllHours(simplified, [19, 20]);
   const availableGroups = getAvailableConsecutiveCourtsByGroup(simplified, [19, 20]);
-  const {Outside_4_Courts,Inside_4_Courts} = availableGroups;
+  const { Outside_4_Courts, Inside_4_Courts } = availableGroups;
   const courtSummary = summarizeAvailableCourts(availableCourts, COURT_GROUPS);
   logger.info("Available courts:", availableCourts);
   logger.info("Available consecutive courts by group:", availableGroups);
@@ -273,7 +283,7 @@ async function main() {
     <h3>Inside 4 Courts: <span style="color: blue;font-weight: bold;">${Inside_4_Courts}</span></h3>
     <p>Click Here to Book: <a href="${IBC_URL}" target="_blank">IBC Archerfield</a></p>
     `;
-    const emailHTML = generateMailHtml(subject,emailContent);
+    const emailHTML = generateMailHtml(subject, emailContent);
     await sendEmail(emailHTML);
 
     // update scout log
