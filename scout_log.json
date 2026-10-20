@@ -22,5 +22,18 @@
         "outside": 0,
         "inside": 0,
         "notifiedAt": "2026-10-20T13:43:54.487Z"
+    },
+    "2026-11-21": {
+        "availableCourts": [
+            "Mercury",
+            "Venus",
+            "Jupiter",
+            "Saturn",
+            "Uranus",
+            "Neptune"
+        ],
+        "outside": 2,
+        "inside": 4,
+        "notifiedAt": "2026-10-20T14:08:42.886Z"
     }
 }

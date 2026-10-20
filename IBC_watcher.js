@@ -16,6 +16,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const NWEEKS = process.env.NWEEKS;
+const CURL_BIN = process.env.CURL_BIN || "curl";
 const MAX_ROLL_FORWARD_WEEKS = Number(process.env.MAX_ROLL_FORWARD_WEEKS ?? 6);
 const IBC_URL = "https://ibcbadminton.yepbooking.com.au/";
 const IBC_SCHEMA_URL = `${IBC_URL}ajax/ajax.schema.php`;
@@ -69,7 +70,7 @@ const get_html = async (year, month, day) => {
     "--write-out", "\n%{http_code}",
   ];
 
-  const { stdout } = await execFileAsync("curl", args, {
+  const { stdout } = await execFileAsync(CURL_BIN, args, {
     maxBuffer: 50 * 1024 * 1024,
   });
 
