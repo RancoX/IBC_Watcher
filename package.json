@@ -14,6 +14,7 @@
     "dotenv": "^17.4.2",
     "googleapis": "^173.0.0",
     "nodemailer": "^8.0.11",
+    "undici": "^8.12.3",
     "winston": "^3.19.0"
   }
 }

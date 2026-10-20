@@ -5,6 +5,10 @@ import dotenv from "dotenv";
 import { generateMailHtml, sendEmail } from "./ranco_auto_gmail.js";
 import { readJsonFile, writeJsonFile } from "./jsonHandler.js";
 import logger from "./logger.js";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,31 +16,72 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const NWEEKS = process.env.NWEEKS;
+const MAX_ROLL_FORWARD_WEEKS = Number(process.env.MAX_ROLL_FORWARD_WEEKS ?? 6);
 const IBC_URL = "https://ibcbadminton.yepbooking.com.au/";
+const IBC_SCHEMA_URL = `${IBC_URL}ajax/ajax.schema.php`;
 const COURT_GROUPS = {
   Outside_4_Courts: ["Mercury", "Venus", "Earth", "Mars"],
   Inside_4_Courts: ["Jupiter", "Saturn", "Uranus", "Neptune"],
 };
 
 const get_html = async (year, month, day) => {
-  const res = await fetch("https://ibcbadminton.yepbooking.com.au/ajax/ajax.schema.php", {
-    method: "POST",
-    headers: {
-      accept: "*/*",
-      "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
-      "user-agent":
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
-    },
-    body: new URLSearchParams({
-      id_sport: "1",
-      day: String(day),
-      month: String(month),
-      year: String(year),
-      event: "datepicker",
-    }),
+  const origin = new URL(IBC_SCHEMA_URL).origin;
+
+  const headers = {
+    accept: "*/*",
+    "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    origin,
+    priority: "u=1, i",
+    referer: `${origin}/`,
+    "sec-ch-ua": '"Google Chrome";v="155", "Chromium";v="155", "Not(A:Brand";v="24"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Linux"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "x-requested-with": "XMLHttpRequest",
+  };
+
+  const body = new URLSearchParams({
+    id_sport: "1",
+    day: String(day),
+    month: String(month),
+    year: String(year),
+    event: "datepicker",
+    timetableWidth: "1210",
+    noticeCheckRequested: "0", 
+    noticeCheck: "0", 
+    idNoticeCheck: "0",
+  }).toString();
+
+  const args = [
+    "--silent",
+    "--show-error",
+    "--location", // follow redirects, like fetch
+    "--compressed", // decode gzip/br, like fetch
+    "--max-time", "30",
+    "--url", IBC_SCHEMA_URL,
+    ...Object.entries(headers).flatMap(([k, v]) => ["-H", `${k}: ${v}`]),
+    "--data-raw", body,
+    // append the status code on its own final line so we can split it off
+    "--write-out", "\n%{http_code}",
+  ];
+
+  const { stdout } = await execFileAsync("curl", args, {
+    maxBuffer: 50 * 1024 * 1024,
   });
 
-  return await res.text();
+  const splitAt = stdout.lastIndexOf("\n");
+  const text = stdout.slice(0, splitAt);
+  const status = Number(stdout.slice(splitAt + 1));
+
+  if (!(status >= 200 && status < 300)) {
+    throw new Error(`Booking endpoint returned HTTP ${status}`);
+  }
+
+  return text;
 };
 
 function extractBookingStatus(htmlText) {
@@ -45,7 +90,7 @@ function extractBookingStatus(htmlText) {
   const table = $("table.schema").first();
 
   if (!table.length) {
-    return {};
+    throw new Error("Booking response did not contain a schema table.");
   }
 
   const times = [];
@@ -73,7 +118,9 @@ function extractBookingStatus(htmlText) {
 
       const title =
         $td.attr("title") ||
+        $td.attr("data-tooltip") ||
         $td.find("a").first().attr("title") ||
+        $td.find("a").first().attr("data-tooltip") ||
         $td.find("a").first().attr("aria-label") ||
         "";
 
@@ -244,18 +291,23 @@ function getSaturdayNWeeksFromToday(nweeks = 3) {
 
 async function main() {
   let current_nweeks = Number(NWEEKS);
+  const initial_nweeks = current_nweeks;
   let { year, month, day } = getSaturdayNWeeksFromToday(current_nweeks);
   logger.info(`Checking IBC booking status for Sat ${year}-${month}-${day}...`);
   // check if email has already been sent
   let scoutData = await readJsonFile();
   let entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
-  while (entryExists) {
+  while (entryExists && current_nweeks - initial_nweeks < MAX_ROLL_FORWARD_WEEKS) {
     logger.info(`Email has already been sent for Sat ${year}-${month}-${day}, now checking next available date.`);
     // Move to the next week
     current_nweeks += 1;
-    ({year, month, day} = getSaturdayNWeeksFromToday(current_nweeks));
+    ({ year, month, day } = getSaturdayNWeeksFromToday(current_nweeks));
     logger.info(`Now forward checking IBC booking status for Sat ${year}-${month}-${day}...`);
     entryExists = Object.prototype.hasOwnProperty.call(scoutData, `${year}-${month}-${day}`);
+  }
+  if (entryExists) {
+    logger.info(`Reached the max roll-forward limit of ${MAX_ROLL_FORWARD_WEEKS} weeks; no unscouted date found.`);
+    return;
   }
   const htmlText = await get_html(year, month, day);
   const bookingStatus = extractBookingStatus(htmlText);

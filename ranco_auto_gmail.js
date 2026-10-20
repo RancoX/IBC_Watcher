@@ -27,7 +27,11 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 oAuth2Client.setCredentials({ refresh_token: gmailRefreshToken });
-const accessToken = await oAuth2Client.getAccessToken();
+const { token: accessToken } = await oAuth2Client.getAccessToken();
+
+if (!accessToken) {
+  throw new Error("Unable to obtain a Gmail access token.");
+}
 
 const smtpTransport = nodemailer.createTransport({
      service: "gmail",
@@ -64,5 +68,6 @@ export async function sendEmail(emailHTML) {
     logger.debug(`Email sent to ${recipients}: ${info.response}`);
   } catch (err) {
     logger.error("Email failed with error message:", err);
+    throw err;
   }
 }

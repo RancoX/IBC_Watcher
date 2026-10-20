@@ -16,5 +16,11 @@
         "outside": 0,
         "inside": 2,
         "notifiedAt": "2026-08-09T00:12:17.119Z"
+    },
+    "2026-11-14": {
+        "availableCourts": [],
+        "outside": 0,
+        "inside": 0,
+        "notifiedAt": "2026-10-20T13:43:54.487Z"
     }
 }
